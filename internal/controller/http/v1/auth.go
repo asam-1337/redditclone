@@ -6,11 +6,9 @@ import (
 	"net/http"
 )
 
-func (h *Handler) RootPage(c *gin.Context) {
-	err := h.Tmpl.ExecuteTemplate(c.Writer, "../static/index.html", nil)
-	if err != nil {
-		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
-	}
+type signInInput struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func (h *Handler) SignUp(c *gin.Context) {
@@ -20,9 +18,29 @@ func (h *Handler) SignUp(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	err = h.services.Authorization.CreateUser(&input)
+	token, err := h.services.Authorization.CreateUser(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusUnauthorized, err.Error())
+	}
+
+	c.JSON(http.StatusCreated, map[string]interface{}{
+		"token": token,
+	})
 }
 
-func (h *Handler) Login(c *gin.Context) {
+func (h *Handler) SignIn(c *gin.Context) {
+	var input signInInput
+	err := c.BindJSON(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+	}
 
+	token, err := h.services.Authorization.GenerateToken(input.Username, input.Password)
+	if err != nil {
+		newErrorResponse(c, http.StatusUnauthorized, err.Error())
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"token": token,
+	})
 }

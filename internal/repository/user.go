@@ -2,40 +2,41 @@ package repository
 
 import (
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
-	"math/rand"
 	"sync"
 )
 
-var (
-	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	idLength    = 32
-)
-
-func RandStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
-
 type UserRepository struct {
-	users []*entity.User
+	users map[string]*entity.User
 	mu    *sync.Mutex
 }
 
 func NewUserRepository(mu *sync.Mutex) *UserRepository {
 	return &UserRepository{
-		users: make([]*entity.User, 1),
+		users: make(map[string]*entity.User, 1),
 		mu:    mu,
 	}
 }
 
-func (repo *UserRepository) CreateUser(user *entity.User) error {
-	user.ID = RandStringRunes(idLength)
+func (repo *UserRepository) AddUser(user *entity.User) error {
+	_, err := repo.GetUserByID(user.ID)
+	if err == nil {
+		return &repoError{Err: "user already exist"}
+	}
 
 	repo.mu.Lock()
-	repo.users = append(repo.users, user)
+	repo.users[user.ID] = user
 	repo.mu.Unlock()
+
 	return nil
+}
+
+func (repo *UserRepository) GetUserByID(userID string) (*entity.User, error) {
+	repo.mu.Lock()
+	user, ok := repo.users[userID]
+	repo.mu.Unlock()
+
+	if !ok {
+		return nil, &repoError{Err: "user does not exist"}
+	}
+	return user, nil
 }

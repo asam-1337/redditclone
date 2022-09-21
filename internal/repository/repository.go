@@ -5,15 +5,26 @@ import (
 	"sync"
 )
 
+type repoError struct {
+	Err string `json:"repo_error"`
+}
+
+func (e repoError) Error() string {
+	return e.Err
+}
+
 type Authorization interface {
-	CreateUser(user *entity.User) error
+	AddUser(user *entity.User) error
+	GetUserByID(userID string) (*entity.User, error)
 }
 
 type Posts interface {
-	GetAll()
-	GetByID()
-	AddPost()
-	AddComment()
+	AddPost(post *entity.Post)
+	GetPostByID(postID string) (*entity.Post, error)
+	GetPostsByUsername(username string) ([]*entity.Post, error)
+	GetPostsByCategory(category string) ([]*entity.Post, error)
+	GetAll() ([]*entity.Post, error)
+	DeletePost(postID string) error
 }
 
 type Repository struct {
@@ -24,5 +35,6 @@ type Repository struct {
 func NewRepository(mu *sync.Mutex) *Repository {
 	return &Repository{
 		Authorization: NewUserRepository(mu),
+		Posts:         NewPostsRepository(mu),
 	}
 }
