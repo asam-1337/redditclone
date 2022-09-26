@@ -14,7 +14,7 @@ func (e serviceError) Error() string {
 }
 
 type Authorization interface {
-	CreateUser(user *entity.User) (string, error)
+	CreateUser(username, password string) (string, error)
 	GenerateToken(username, password string) (string, error)
 	ParseToken(token string) (string, string, error)
 }
@@ -28,6 +28,9 @@ type Posts interface {
 	DeletePost(postID string) error
 
 	CreateComment(userID, postID, comment string) (*entity.Post, error)
+
+	Vote(postID string, vote *entity.Vote) (*entity.Post, error)
+	Unvote(userID, postID string) (*entity.Post, error)
 }
 
 type Service struct {

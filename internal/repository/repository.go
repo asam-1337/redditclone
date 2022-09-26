@@ -25,6 +25,9 @@ type Posts interface {
 	GetPostsByCategory(category string) ([]*entity.Post, error)
 	GetAll() ([]*entity.Post, error)
 	DeletePost(postID string) error
+
+	Vote(postID string, vote *entity.Vote) (*entity.Post, error)
+	Unvote(userID, postID string) (*entity.Post, error)
 }
 
 type Repository struct {

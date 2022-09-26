@@ -44,7 +44,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			post.GET("/", h.GetPostByID)
 			post.POST("/", h.AuthMiddleware, h.CreateComment)
 			post.DELETE("/", h.AuthMiddleware, h.DeletePost)
-			post.DELETE("/:comment_id", h.AuthMiddleware, h.DeleteComment)
+			post.DELETE("/:comment_id", h.AuthMiddleware)
 
 			post.GET("/upvote", h.AuthMiddleware, h.GetUpvote)
 			post.GET("/unvote", h.AuthMiddleware, h.GetUnvote)

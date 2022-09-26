@@ -33,12 +33,14 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) CreateUser(user *entity.User) (string, error) {
-	username := user.Username
-	password := user.Password
+func (s *AuthService) CreateUser(username, password string) (string, error) {
+	user := &entity.User{
+		Username: username,
+	}
 
+	fmt.Println("pass: ", user.Password)
 	user.ID = generateMd5Hash(username)
-	user.Password = generateMd5Hash(user.Password)
+	user.Password = generateMd5Hash(password)
 
 	err := s.repo.AddUser(user)
 	if err != nil {
@@ -56,7 +58,10 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 		return "", serviceError{"invalid login"}
 	}
 
-	if user.Password != generateMd5Hash(password) {
+	passwordHash := generateMd5Hash(password)
+	fmt.Println(password)
+	fmt.Println(user.Password, " == ", passwordHash)
+	if user.Password != passwordHash {
 		return "", serviceError{"invalid password"}
 	}
 

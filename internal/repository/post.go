@@ -88,3 +88,42 @@ func (repo *PostsRepository) DeletePost(postID string) error {
 	delete(repo.posts, postID)
 	return nil
 }
+
+func (repo *PostsRepository) Vote(postID string, vote *entity.Vote) (*entity.Post, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	post, ok := repo.posts[postID]
+	if !ok {
+		return nil, fmt.Errorf("post %s does not exist", postID)
+	}
+
+	for _, val := range post.Votes {
+		if val.UserId == vote.UserId {
+			val.Vote = vote.Vote
+			return post, nil
+		}
+	}
+	post.Votes = append(post.Votes, vote)
+
+	return post, nil
+}
+
+func (repo *PostsRepository) Unvote(userID, postID string) (*entity.Post, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	post, ok := repo.posts[postID]
+	if !ok {
+		return nil, fmt.Errorf("post %s does not exist", postID)
+	}
+
+	for i, vote := range post.Votes {
+		if vote.UserId == userID {
+			post.Votes = append(post.Votes[:i], post.Votes[i+1:]...)
+			return post, nil
+		}
+	}
+
+	return nil, fmt.Errorf("did not from this post")
+}

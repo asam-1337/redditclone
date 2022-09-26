@@ -122,14 +122,98 @@ func (h *Handler) CreateComment(c *gin.Context) {
 		"comment": "",
 	}
 
-	err := c.BindJSON(input)
+	err := c.BindJSON(&input)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	post, err := h.services.Posts.CreateComment(userID, postID, input["comment"])
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+func (h *Handler) GetUpvote(c *gin.Context) {
+	val, ok := c.Get(userIDCtx)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "userID does not exist in context")
+		return
+	}
+
+	userID, ok := val.(string)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "invalid type of userID")
+		return
+	}
+
+	postID := c.Param("post_id")
+
+	input := &entity.Vote{
+		UserId: userID,
+		Vote:   1,
+	}
+
+	post, err := h.services.Vote(postID, input)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+func (h *Handler) GetDownvote(c *gin.Context) {
+	val, ok := c.Get(userIDCtx)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "userID does not exist in context")
+		return
+	}
+
+	userID, ok := val.(string)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "invalid type of userID")
+		return
+	}
+
+	postID := c.Param("post_id")
+
+	input := &entity.Vote{
+		UserId: userID,
+		Vote:   -1,
+	}
+
+	post, err := h.services.Vote(postID, input)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+func (h *Handler) GetUnvote(c *gin.Context) {
+	val, ok := c.Get(userIDCtx)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "userID does not exist in context")
+		return
+	}
+
+	userID, ok := val.(string)
+	if !ok {
+		newErrorResponse(c, http.StatusUnauthorized, "invalid type of userID")
+		return
+	}
+
+	postID := c.Param("post_id")
+
+	post, err := h.services.Unvote(userID, postID)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, post)

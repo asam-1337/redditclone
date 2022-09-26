@@ -32,6 +32,14 @@ func (s *PostsService) CreatePost(post *entity.Post, userID string) (*entity.Pos
 	post.User = user
 	post.ID = getRandomSeed(idLen)
 	post.Created = time.Now().Format(time.RFC3339)
+	vote := &entity.Vote{
+		UserId: userID,
+		Vote:   1,
+	}
+	post.Votes = append(post.Votes, vote)
+	post.Views = 1
+	post.Score = 1
+	post.UpvotePercentage = 100
 
 	s.postRepo.AddPost(post)
 
@@ -39,7 +47,13 @@ func (s *PostsService) CreatePost(post *entity.Post, userID string) (*entity.Pos
 }
 
 func (s *PostsService) GetPostByID(postID string) (*entity.Post, error) {
-	return s.postRepo.GetPostByID(postID)
+	post, err := s.postRepo.GetPostByID(postID)
+	if err != nil {
+		return nil, err
+	}
+	post.Views++
+
+	return post, nil
 }
 
 func (s *PostsService) GetAll() ([]*entity.Post, error) {
@@ -77,6 +91,48 @@ func (s *PostsService) CreateComment(userID, postID, body string) (*entity.Post,
 	}
 
 	post.Comments = append(post.Comments, comment)
+
+	return post, nil
+}
+
+func updatePostVotes(post *entity.Post) {
+	var upVotes, postVote int
+	post.Score = 0
+
+	for _, val := range post.Votes {
+		postVote = val.Vote
+		if postVote == 1 {
+			upVotes += postVote
+		}
+		post.Score += val.Vote
+	}
+
+	if len(post.Votes) == 0 {
+		post.UpvotePercentage = 0
+		return
+	}
+
+	post.UpvotePercentage = upVotes / len(post.Votes) * 100
+}
+
+func (s *PostsService) Vote(postID string, vote *entity.Vote) (*entity.Post, error) {
+	post, err := s.postRepo.Vote(postID, vote)
+	if err != nil {
+		return nil, err
+	}
+
+	updatePostVotes(post)
+
+	return post, nil
+}
+
+func (s *PostsService) Unvote(userID, postID string) (*entity.Post, error) {
+	post, err := s.postRepo.Unvote(userID, postID)
+	if err != nil {
+		return nil, err
+	}
+
+	updatePostVotes(post)
 
 	return post, nil
 }
