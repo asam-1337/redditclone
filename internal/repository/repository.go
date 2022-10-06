@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
+	"github.com/jmoiron/sqlx"
 	"sync"
 )
 
@@ -35,9 +36,9 @@ type Repository struct {
 	Posts
 }
 
-func NewRepository(mu *sync.Mutex) *Repository {
+func NewRepository(mu *sync.Mutex, db *sqlx.DB) *Repository {
 	return &Repository{
-		Authorization: NewUserRepository(mu),
+		Authorization: NewUserRepository(mu, db),
 		Posts:         NewPostsRepository(mu),
 	}
 }

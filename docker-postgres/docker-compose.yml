@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: pg-docker
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "docker"
+      POSTGRES_PASSWORD: "docker"
+    volumes:
+      - ../schema/:/docker-entrypoint-initdb.d
+
+#  postgres:
+#    image: postgres:latest
+#    environment:
+#      DB_NAME: "postgres"
+#      DB_HOST: "localhost"
+#      POSTGRES_PASSWORD: "qwerty"
+#      USER_NAME: "postgres"
+#    ports:
+#      - "5432:5432"
+
+#version: "3.9"
+#services:
+#  postgres:
+#    image: postgres:13.3
+#    environment:
+#      POSTGRES_DB: "habrdb"
+#      POSTGRES_USER: "habrpguser"
+#      POSTGRES_PASSWORD: "pgpwd4habr"
+#      PGDATA: "/var/lib/postgresql/data/pgdata"
+#    volumes:
+#      - ../2. Init Database:/docker-entrypoint-initdb.d
+#      - .:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
