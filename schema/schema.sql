@@ -4,3 +4,5 @@ CREATE TABLE IF NOT EXISTS users
     username varchar(255) not null unique,
     password_hash varchar(255) not null
 );
+
+-- DROP TABLE IF EXISTS users

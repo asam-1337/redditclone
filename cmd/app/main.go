@@ -5,11 +5,8 @@ import (
 	"github.com/asam-1337/reddit-clone.git/internal/repository"
 	"github.com/asam-1337/reddit-clone.git/internal/service"
 	"github.com/asam-1337/reddit-clone.git/pkg/httpserver"
-<<<<<<< HEAD
-=======
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
->>>>>>> 9095c13b73e4758d1574c5bcebdee4ce847e73b0
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -18,15 +15,11 @@ import (
 
 func main() {
 	if err := initConfig(); err != nil {
-<<<<<<< HEAD
 		log.Fatalf("error occured in initializing config: %s", err.Error())
-=======
-		log.Fatalf("error occured in read config: %s", err.Error())
 	}
 
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error occured in read .env file: %s", err.Error())
->>>>>>> 9095c13b73e4758d1574c5bcebdee4ce847e73b0
+		log.Fatalf("error occurred in read .env file: %s", err.Error())
 	}
 
 	mu := &sync.Mutex{}
@@ -54,11 +47,7 @@ func main() {
 }
 
 func initConfig() error {
-<<<<<<< HEAD
 	viper.AddConfigPath("configs")
-=======
-	viper.AddConfigPath("./config")
->>>>>>> 9095c13b73e4758d1574c5bcebdee4ce847e73b0
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
 }
