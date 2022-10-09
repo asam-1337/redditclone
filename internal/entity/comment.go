@@ -6,13 +6,13 @@ const (
 )
 
 type Comment struct {
-	ID      string `json:"id"`
+	ID      int    `json:"id,string"`
 	Body    string `json:"body"`
 	User    *User  `json:"author"`
 	Created string `json:"created"`
 }
 
 type Vote struct {
-	UserId string `json:"user"`
-	Vote   int    `json:"vote"`
+	UserId int `json:"user,string"`
+	Vote   int `json:"vote"`
 }

@@ -6,7 +6,10 @@ import (
 )
 
 const (
-	usersTable = "users"
+	usersTable    = "users"
+	postsTable    = "posts"
+	commentsTable = "comments"
+	votesTable    = "votes"
 )
 
 type Config struct {

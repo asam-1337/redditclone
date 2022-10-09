@@ -3,7 +3,6 @@ package service
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/asam-1337/reddit-clone.git/internal/entity"
 	"github.com/asam-1337/reddit-clone.git/internal/repository"
 	"github.com/dgrijalva/jwt-go"
 	"log"
@@ -11,13 +10,13 @@ import (
 )
 
 const (
-	salt            = "vcmn324mdsf92mfksdsdf3"
+	salt            = ""
 	tokenSigningKey = "asdwgfdgkert8"
 )
 
 type jwtUser struct {
 	Username string `json:"username"`
-	ID       string `json:"id"`
+	ID       int    `json:"id,string"`
 }
 
 type tokenClaims struct {
@@ -34,37 +33,24 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 }
 
 func (s *AuthService) CreateUser(username, password string) (string, error) {
-	user := &entity.User{
-		Username: username,
-	}
-
-	fmt.Println("pass: ", user.Password)
-	user.ID = generateMd5Hash(username)
-	user.Password = generateMd5Hash(password)
-
-	err := s.repo.AddUser(user)
+	id, err := s.repo.CreateUser(username, password)
 	if err != nil {
 		return "", err
 	}
 
-	return s.GenerateToken(username, password)
+	return s.GenerateToken(id, username)
 }
 
-func (s *AuthService) GenerateToken(username, password string) (string, error) {
-	userID := generateMd5Hash(username)
-
-	user, err := s.repo.GetUserByID(userID)
+func (s *AuthService) Authenticate(username, password string) (string, error) {
+	user, err := s.repo.GetUserByUsernamePassword(username, password)
 	if err != nil {
-		return "", serviceError{"invalid login"}
+		return "", serviceError{"user not found"}
 	}
 
-	passwordHash := generateMd5Hash(password)
-	fmt.Println(password)
-	fmt.Println(user.Password, " == ", passwordHash)
-	if user.Password != passwordHash {
-		return "", serviceError{"invalid password"}
-	}
+	return s.GenerateToken(user.ID, user.Username)
+}
 
+func (s *AuthService) GenerateToken(userID int, username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims{
 		jwt.StandardClaims{
 			IssuedAt:  time.Now().Unix(),
@@ -75,32 +61,34 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 			ID:       userID,
 		},
 	})
+
 	return token.SignedString([]byte(tokenSigningKey))
 }
 
-func (s *AuthService) ParseToken(accessToken string) (string, string, error) {
+func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		method, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok && method.Alg() != "HS256" {
 			return nil, &serviceError{"bad sign method"}
 		}
+
 		return []byte(tokenSigningKey), nil
 	}
 
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, keyFunc)
 	if err != nil {
 		log.Println("service: ParseToken: ", err.Error())
-		return "", "", err
+		return 0, err
 	}
 
 	claims, ok := token.Claims.(*tokenClaims)
 	if !ok {
-		return "", "", serviceError{"token claims are not type of *tokenClaims"}
+		return 0, serviceError{"token claims are not type of *tokenClaims"}
 	}
 
 	log.Println("service: ParseToken: Parsed token")
 
-	return claims.User.ID, claims.User.Username, nil
+	return claims.User.ID, nil
 
 }
 

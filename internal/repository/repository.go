@@ -3,7 +3,6 @@ package repository
 import (
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
 	"github.com/jmoiron/sqlx"
-	"sync"
 )
 
 type repoError struct {
@@ -15,20 +14,21 @@ func (e repoError) Error() string {
 }
 
 type Authorization interface {
-	AddUser(user *entity.User) error
-	GetUserByID(userID string) (*entity.User, error)
+	CreateUser(username, password string) (int, error)
+	GetUserByUsernamePassword(username string, password string) (*entity.User, error)
+	GetUserByID(userID int) (*entity.User, error)
 }
 
 type Posts interface {
-	AddPost(post *entity.Post)
-	GetPostByID(postID string) (*entity.Post, error)
+	CreatePost(post *entity.Post) (int, error)
+	GetPostByID(postID int) (*entity.Post, error)
 	GetPostsByUsername(username string) ([]*entity.Post, error)
 	GetPostsByCategory(category string) ([]*entity.Post, error)
 	GetAll() ([]*entity.Post, error)
-	DeletePost(postID string) error
+	DeletePost(postID int) error
 
-	Vote(postID string, vote *entity.Vote) (*entity.Post, error)
-	Unvote(userID, postID string) (*entity.Post, error)
+	Vote(postID int, vote *entity.Vote) (*entity.Post, error)
+	Unvote(userID int, postID int) (*entity.Post, error)
 }
 
 type Repository struct {
@@ -36,9 +36,9 @@ type Repository struct {
 	Posts
 }
 
-func NewRepository(mu *sync.Mutex, db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
-		Authorization: NewUserRepository(mu, db),
-		Posts:         NewPostsRepository(mu),
+		Authorization: NewUserRepository(db),
+		Posts:         NewPostsRepository(db),
 	}
 }

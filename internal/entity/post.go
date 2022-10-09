@@ -1,7 +1,7 @@
 package entity
 
 type Post struct {
-	ID               string     `json:"id"`
+	ID               int        `json:"id,string"`
 	Type             string     `json:"type"`
 	Title            string     `json:"title"`
 	Category         string     `json:"category"`

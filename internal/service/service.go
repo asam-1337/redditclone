@@ -15,22 +15,22 @@ func (e serviceError) Error() string {
 
 type Authorization interface {
 	CreateUser(username, password string) (string, error)
-	GenerateToken(username, password string) (string, error)
-	ParseToken(token string) (string, string, error)
+	GenerateToken(userID int, username string) (string, error)
+	ParseToken(token string) (int, error)
 }
 
 type Posts interface {
-	CreatePost(post *entity.Post, userID string) (*entity.Post, error)
-	GetPostByID(postID string) (*entity.Post, error)
+	CreatePost(post *entity.Post, userID int) (*entity.Post, error)
+	GetPostByID(postID int) (*entity.Post, error)
 	GetPostsByUsername(username string) ([]*entity.Post, error)
 	GetPostsByCategory(category string) ([]*entity.Post, error)
 	GetAll() ([]*entity.Post, error)
-	DeletePost(postID string) error
+	DeletePost(postID int) error
 
-	CreateComment(userID, postID, comment string) (*entity.Post, error)
+	CreateComment(userID int, postID int, comment string) (*entity.Post, error)
 
-	Vote(postID string, vote *entity.Vote) (*entity.Post, error)
-	Unvote(userID, postID string) (*entity.Post, error)
+	Vote(postID int, vote *entity.Vote) (*entity.Post, error)
+	Unvote(userID int, postID int) (*entity.Post, error)
 }
 
 type Service struct {

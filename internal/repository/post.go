@@ -3,127 +3,59 @@ package repository
 import (
 	"fmt"
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
-	"sync"
+	"github.com/jmoiron/sqlx"
 )
 
 type PostsRepository struct {
-	posts map[string]*entity.Post
-	mu    *sync.Mutex
+	db *sqlx.DB
 }
 
-func NewPostsRepository(mu *sync.Mutex) *PostsRepository {
+func NewPostsRepository(db *sqlx.DB) *PostsRepository {
 	return &PostsRepository{
-		mu:    mu,
-		posts: make(map[string]*entity.Post, 1),
+		db: db,
 	}
 }
 
-func (repo *PostsRepository) AddPost(post *entity.Post) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
+func (repo *PostsRepository) CreatePost(post *entity.Post) (int, error) {
+	var id int
 
-	repo.posts[post.ID] = post
-}
+	query := fmt.Sprintf("INSERT INTO %s (post_type, title, post_category, post_text, url, user_id, created) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,) RETURNING id", usersTable)
+	row := repo.db.QueryRow(query, post.Type, post.Title, post.Category, post.Text, post.URL, post.User.ID, post.Created)
 
-func (repo *PostsRepository) GetPostByID(postID string) (*entity.Post, error) {
-
-	repo.mu.Lock()
-	post, ok := repo.posts[postID]
-	repo.mu.Unlock()
-
-	if !ok {
-		return nil, fmt.Errorf("post %s does not exist", postID)
+	if err := row.Scan(&id); err != nil {
+		return 0, err
 	}
 
-	return post, nil
+	return id, nil
+}
+
+func (repo *PostsRepository) GetPostByID(postID int) (*entity.Post, error) {
+
 }
 
 func (repo *PostsRepository) GetAll() ([]*entity.Post, error) {
-	posts := make([]*entity.Post, 0, len(repo.posts))
 
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	for _, val := range repo.posts {
-		posts = append(posts, val)
-	}
-
-	return posts, nil
 }
 
 func (repo *PostsRepository) GetPostsByUsername(username string) ([]*entity.Post, error) {
-	posts := make([]*entity.Post, 0, 1)
+	var posts []*entity.Post
 
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	for _, val := range repo.posts {
-		if val.User.Username == username {
-			posts = append(posts, val)
-		}
-	}
-
-	return posts, nil
+	query := fmt.Sprintf("SELECT p.post_type, p.title, p.post_category, p.post_text, p.url, p.username, p.user_id, p.created FROM %s p INNER JOIN %s u on p.user_id = u.id WHERE p.username=$1", postsTable, usersTable)
+	repo.db.Select(&posts, query, username)
 }
 
 func (repo *PostsRepository) GetPostsByCategory(category string) ([]*entity.Post, error) {
-	posts := make([]*entity.Post, 0, 1)
 
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	for _, val := range repo.posts {
-		if val.Category == category {
-			posts = append(posts, val)
-		}
-	}
-
-	return posts, nil
 }
 
-func (repo *PostsRepository) DeletePost(postID string) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
+func (repo *PostsRepository) DeletePost(postID int) error {
 
-	delete(repo.posts, postID)
-	return nil
 }
 
-func (repo *PostsRepository) Vote(postID string, vote *entity.Vote) (*entity.Post, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
+func (repo *PostsRepository) Vote(postID int, vote *entity.Vote) (*entity.Post, error) {
 
-	post, ok := repo.posts[postID]
-	if !ok {
-		return nil, fmt.Errorf("post %s does not exist", postID)
-	}
-
-	for _, val := range post.Votes {
-		if val.UserId == vote.UserId {
-			val.Vote = vote.Vote
-			return post, nil
-		}
-	}
-	post.Votes = append(post.Votes, vote)
-
-	return post, nil
 }
 
-func (repo *PostsRepository) Unvote(userID, postID string) (*entity.Post, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
+func (repo *PostsRepository) Unvote(userID int, postID int) (*entity.Post, error) {
 
-	post, ok := repo.posts[postID]
-	if !ok {
-		return nil, fmt.Errorf("post %s does not exist", postID)
-	}
-
-	for i, vote := range post.Votes {
-		if vote.UserId == userID {
-			post.Votes = append(post.Votes[:i], post.Votes[i+1:]...)
-			return post, nil
-		}
-	}
-
-	return nil, fmt.Errorf("did not from this post")
 }

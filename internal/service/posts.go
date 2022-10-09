@@ -23,14 +23,13 @@ func NewPostsService(userRepo repository.Authorization, postRepo repository.Post
 	}
 }
 
-func (s *PostsService) CreatePost(post *entity.Post, userID string) (*entity.Post, error) {
+func (s *PostsService) CreatePost(post *entity.Post, userID int) (*entity.Post, error) {
 	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
 
 	post.User = user
-	post.ID = getRandomSeed(idLen)
 	post.Created = time.Now().Format(time.RFC3339)
 	vote := &entity.Vote{
 		UserId: userID,
@@ -41,12 +40,15 @@ func (s *PostsService) CreatePost(post *entity.Post, userID string) (*entity.Pos
 	post.Score = 1
 	post.UpvotePercentage = 100
 
-	s.postRepo.AddPost(post)
+	post.ID, err = s.postRepo.CreatePost(post)
+	if err != nil {
+		return nil, err
+	}
 
 	return post, nil
 }
 
-func (s *PostsService) GetPostByID(postID string) (*entity.Post, error) {
+func (s *PostsService) GetPostByID(postID int) (*entity.Post, error) {
 	post, err := s.postRepo.GetPostByID(postID)
 	if err != nil {
 		return nil, err
@@ -68,11 +70,11 @@ func (s *PostsService) GetPostsByCategory(category string) ([]*entity.Post, erro
 	return s.postRepo.GetPostsByCategory(category)
 }
 
-func (s *PostsService) DeletePost(postID string) error {
+func (s *PostsService) DeletePost(postID int) error {
 	return s.postRepo.DeletePost(postID)
 }
 
-func (s *PostsService) CreateComment(userID, postID, body string) (*entity.Post, error) {
+func (s *PostsService) CreateComment(userID int, postID int, body string) (*entity.Post, error) {
 	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return nil, err
@@ -84,7 +86,6 @@ func (s *PostsService) CreateComment(userID, postID, body string) (*entity.Post,
 	}
 
 	comment := &entity.Comment{
-		ID:      getRandomSeed(24),
 		Body:    body,
 		Created: time.Now().Format(time.RFC3339),
 		User:    user,
@@ -115,7 +116,7 @@ func updatePostVotes(post *entity.Post) {
 	post.UpvotePercentage = upVotes / len(post.Votes) * 100
 }
 
-func (s *PostsService) Vote(postID string, vote *entity.Vote) (*entity.Post, error) {
+func (s *PostsService) Vote(postID int, vote *entity.Vote) (*entity.Post, error) {
 	post, err := s.postRepo.Vote(postID, vote)
 	if err != nil {
 		return nil, err
@@ -126,7 +127,7 @@ func (s *PostsService) Vote(postID string, vote *entity.Vote) (*entity.Post, err
 	return post, nil
 }
 
-func (s *PostsService) Unvote(userID, postID string) (*entity.Post, error) {
+func (s *PostsService) Unvote(userID int, postID int) (*entity.Post, error) {
 	post, err := s.postRepo.Unvote(userID, postID)
 	if err != nil {
 		return nil, err
