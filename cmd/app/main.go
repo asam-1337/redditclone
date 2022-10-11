@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
-	"sync"
 )
 
 func main() {
@@ -22,7 +21,6 @@ func main() {
 		log.Fatalf("error occurred in read .env file: %s", err.Error())
 	}
 
-	mu := &sync.Mutex{}
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
@@ -35,7 +33,7 @@ func main() {
 		log.Fatalf("error occured in db open: %s", err.Error())
 	}
 
-	repo := repository.NewRepository(mu, db)
+	repo := repository.NewRepository(db)
 	services := service.NewService(repo)
 	handlers := v1.NewHandler(services)
 

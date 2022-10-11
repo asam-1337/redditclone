@@ -116,24 +116,34 @@ func updatePostVotes(post *entity.Post) {
 	post.UpvotePercentage = upVotes / len(post.Votes) * 100
 }
 
-func (s *PostsService) Vote(postID int, vote *entity.Vote) (*entity.Post, error) {
-	post, err := s.postRepo.Vote(postID, vote)
+func (s *PostsService) Vote(userID int, postID int, vote int) (*entity.Post, error) {
+	err := s.postRepo.Vote(userID, postID, vote)
 	if err != nil {
 		return nil, err
 	}
 
-	updatePostVotes(post)
+	post, err := s.postRepo.GetPostByID(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, err
+	}
 
 	return post, nil
 }
 
 func (s *PostsService) Unvote(userID int, postID int) (*entity.Post, error) {
-	post, err := s.postRepo.Unvote(userID, postID)
+	err := s.postRepo.Unvote(userID, postID)
 	if err != nil {
 		return nil, err
 	}
 
-	updatePostVotes(post)
+	post, err := s.postRepo.GetPostByID(postID)
+	if err != nil {
+		return nil, err
+	}
 
 	return post, nil
 }

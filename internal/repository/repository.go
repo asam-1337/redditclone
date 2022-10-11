@@ -15,7 +15,7 @@ func (e repoError) Error() string {
 
 type Authorization interface {
 	CreateUser(username, password string) (int, error)
-	GetUserByUsernamePassword(username string, password string) (*entity.User, error)
+	GetUserByUsername(username string) (*entity.User, error)
 	GetUserByID(userID int) (*entity.User, error)
 }
 
@@ -27,8 +27,9 @@ type Posts interface {
 	GetAll() ([]*entity.Post, error)
 	DeletePost(postID int) error
 
-	Vote(postID int, vote *entity.Vote) (*entity.Post, error)
-	Unvote(userID int, postID int) (*entity.Post, error)
+	GetVotes(postID int) ([]*entity.Vote, error)
+	Vote(userID int, postID int, vote int) error
+	Unvote(userID int, postID int) error
 }
 
 type Repository struct {

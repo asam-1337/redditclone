@@ -170,12 +170,7 @@ func (h *Handler) GetUpvote(c *gin.Context) {
 		return
 	}
 
-	input := &entity.Vote{
-		UserId: userID,
-		Vote:   1,
-	}
-
-	post, err := h.services.Vote(postID, input)
+	post, err := h.services.Vote(userID, postID, 1)
 	if err != nil {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
@@ -203,12 +198,7 @@ func (h *Handler) GetDownvote(c *gin.Context) {
 		return
 	}
 
-	input := &entity.Vote{
-		UserId: userID,
-		Vote:   -1,
-	}
-
-	post, err := h.services.Vote(postID, input)
+	post, err := h.services.Vote(userID, postID, -1)
 	if err != nil {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return

@@ -33,6 +33,19 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 }
 
 func (s *AuthService) CreateUser(username, password string) (string, error) {
+	token, err := s.Authenticate(username, password)
+	if err != nil {
+		switch err.(type) {
+		case *serviceError:
+		default:
+			return token, err
+		}
+	} else {
+		return token, err
+	}
+
+	password = generateMd5Hash(password)
+	fmt.Println(password)
 	id, err := s.repo.CreateUser(username, password)
 	if err != nil {
 		return "", err
@@ -42,9 +55,14 @@ func (s *AuthService) CreateUser(username, password string) (string, error) {
 }
 
 func (s *AuthService) Authenticate(username, password string) (string, error) {
-	user, err := s.repo.GetUserByUsernamePassword(username, password)
+	password = generateMd5Hash(password)
+	user, err := s.repo.GetUserByUsername(username)
 	if err != nil {
-		return "", serviceError{"user not found"}
+		return "", &serviceError{"invalid login " + err.Error()}
+	}
+
+	if user.Password != password {
+		return "", fmt.Errorf("invalid password")
 	}
 
 	return s.GenerateToken(user.ID, user.Username)

@@ -13,6 +13,6 @@ type Comment struct {
 }
 
 type Vote struct {
-	UserId int `json:"user,string"`
-	Vote   int `json:"vote"`
+	UserId int `json:"user,string" db:"user_id"`
+	Vote   int `json:"vote" db:"vote"`
 }

@@ -16,6 +16,7 @@ func (e serviceError) Error() string {
 type Authorization interface {
 	CreateUser(username, password string) (string, error)
 	GenerateToken(userID int, username string) (string, error)
+	Authenticate(username, password string) (string, error)
 	ParseToken(token string) (int, error)
 }
 
@@ -29,7 +30,7 @@ type Posts interface {
 
 	CreateComment(userID int, postID int, comment string) (*entity.Post, error)
 
-	Vote(postID int, vote *entity.Vote) (*entity.Post, error)
+	Vote(userID int, postID int, vote int) (*entity.Post, error)
 	Unvote(userID int, postID int) (*entity.Post, error)
 }
 

@@ -29,16 +29,15 @@ func (repo *UserRepository) CreateUser(username, password string) (int, error) {
 	return id, nil
 }
 
-func (repo *UserRepository) GetUserByUsernamePassword(username string, password string) (*entity.User, error) {
+func (repo *UserRepository) GetUserByUsername(username string) (*entity.User, error) {
 	user := &entity.User{
 		Username: username,
-		Password: password,
 	}
 
-	selectQuery := fmt.Sprintf("SELECT id FROM %s WHERE username=$1 AND password_hash=$2", usersTable)
-	row := repo.db.QueryRow(selectQuery, username, password)
+	selectQuery := fmt.Sprintf("SELECT id, password_hash FROM %s WHERE username=$1", usersTable)
+	row := repo.db.QueryRow(selectQuery, username)
 
-	if err := row.Scan(&user.ID); err != nil {
+	if err := row.Scan(&user.ID, &user.Password); err != nil {
 		return nil, err
 	}
 

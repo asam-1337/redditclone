@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS comments
     id serial not null unique,
     user_id int references users(id) on delete cascade not null,
     post_id int references posts(id) on delete cascade not null,
-    body varchar(255) not null
+    body varchar(255) not null,
+    created varchar(255) not null
 );
 
 CREATE TABLE IF NOT EXISTS votes
