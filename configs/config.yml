@@ -3,5 +3,7 @@ port: "8080"
 db:
   host: "localhost"
   port: "5432"
+  username: "docker"
+  password: "docker"
   dbname: "postgres"
   sslmode: "disable"

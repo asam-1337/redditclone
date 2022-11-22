@@ -9,7 +9,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"log"
-	"os"
 )
 
 func main() {
@@ -24,8 +23,8 @@ func main() {
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
-		Username: os.Getenv("DB_USERNAME"),
-		Password: os.Getenv("DB_PASSWORD"),
+		Username: viper.GetString("db.username"),
+		Password: viper.GetString("db.password"),
 		DBName:   viper.GetString("db.dbname"),
 		SSLMode:  viper.GetString("db.sslmode"),
 	})
