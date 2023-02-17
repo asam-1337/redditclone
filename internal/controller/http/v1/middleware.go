@@ -2,7 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 )
@@ -14,29 +14,33 @@ const (
 )
 
 func (h *Handler) AuthMiddleware(c *gin.Context) {
-
-	log.Printf("url: %s, method: %s\n", c.Request.URL, c.Request.Method)
-
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
-		log.Println("middleware: get authorization header failed")
+		logrus.Println("middleware: get authorization header failed")
 		newErrorResponse(c, http.StatusUnauthorized, "empty auth header")
 		return
 	}
 
 	headerParts := strings.Split(header, " ")
 	if len(headerParts) != 2 {
-		log.Println("middleware: invalid auth header")
+		logrus.Println("middleware: invalid auth header")
 		newErrorResponse(c, http.StatusUnauthorized, "invalid auth header")
 		return
 	}
 
 	userID, err := h.services.Authorization.ParseToken(headerParts[1])
 	if err != nil {
-		log.Println("middleware: ", err.Error())
+		logrus.Println("middleware: ", err.Error())
 		newErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	c.Set(userIDCtx, userID)
+}
+
+func (h *Handler) AccessLogMiddleware(c *gin.Context) {
+	logrus.WithFields(logrus.Fields{
+		"metgod": c.Request.Method,
+		"url":    c.Request.URL.Path,
+	}).Info(c.Request.URL.Path)
 }

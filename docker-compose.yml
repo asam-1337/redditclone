@@ -12,3 +12,8 @@ services:
       POSTGRES_PASSWORD: "docker"
     volumes:
       - ./schema/:/docker-entrypoint-initdb.d
+
+  redis:
+    image: 'redis'
+    ports:
+      - '6379:6379'

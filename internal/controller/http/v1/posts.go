@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"strconv"
@@ -18,8 +19,6 @@ func (h *Handler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	log.Printf("createPost: get context params userID: %s", val)
-
 	input := &entity.Post{}
 	err := c.BindJSON(input)
 	fmt.Println()
@@ -27,8 +26,6 @@ func (h *Handler) CreatePost(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	log.Println("createPost: ", input)
 
 	userID, ok := val.(int)
 	if !ok {
@@ -42,8 +39,7 @@ func (h *Handler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	log.Println("create Post")
-
+	logrus.Info("CREATED", post.ID)
 	c.JSON(http.StatusOK, post)
 }
 
@@ -71,7 +67,6 @@ func (h *Handler) GetPostsByUsername(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
-
 	c.JSON(http.StatusOK, &posts)
 }
 
@@ -106,6 +101,7 @@ func (h *Handler) DeletePost(c *gin.Context) {
 
 	err = h.services.Posts.DeletePost(postID)
 	if err != nil {
+		logrus.Println(err.Error())
 		newErrorResponse(c, http.StatusNotFound, "post not found")
 		return
 	}

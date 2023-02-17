@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/asam-1337/reddit-clone.git/internal/entity"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type postDTO struct {
@@ -44,6 +45,7 @@ func (repo *PostsRepository) CreatePost(post *entity.Post) (int, error) {
 	row := repo.db.QueryRow(query, post.Type, post.Title, post.Category, post.Text, post.URL, post.User.ID, post.Created)
 
 	if err := row.Scan(&id); err != nil {
+		logrus.Info("create error", err.Error())
 		return 0, err
 	}
 
@@ -51,13 +53,16 @@ func (repo *PostsRepository) CreatePost(post *entity.Post) (int, error) {
 }
 
 func (repo *PostsRepository) GetPostByID(postID int) (*entity.Post, error) {
-	post := &entity.Post{}
-	user := &entity.User{}
+	post := &entity.Post{
+		ID:   postID,
+		User: &entity.User{},
+	}
+
 	var err error
 	query := fmt.Sprintf("SELECT p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u ON p.user_id=u.id WHERE p.id=$1", postsTable, usersTable)
 	row := repo.db.QueryRow(query, postID)
 
-	if err := row.Scan(&post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &user.ID, &user.Username); err != nil {
+	if err := row.Scan(&post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &post.User.ID, &post.User.Username); err != nil {
 		return nil, err
 	}
 
@@ -77,17 +82,18 @@ func (repo *PostsRepository) GetPostByID(postID int) (*entity.Post, error) {
 func (repo *PostsRepository) GetAll() ([]*entity.Post, error) {
 	var posts []*entity.Post
 
-	query := fmt.Sprintf("SELECT p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id", postsTable, usersTable)
+	query := fmt.Sprintf("SELECT p.id, p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id", postsTable, usersTable)
 	rows, err := repo.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
-		post := &entity.Post{}
-		user := &entity.User{}
+		post := &entity.Post{
+			User: &entity.User{},
+		}
 
-		if err := rows.Scan(&post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&post.ID, &post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &post.User.ID, &post.User.Username); err != nil {
 			return nil, err
 		}
 
@@ -100,6 +106,8 @@ func (repo *PostsRepository) GetAll() ([]*entity.Post, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		posts = append(posts, post)
 	}
 
 	return posts, err
@@ -108,17 +116,18 @@ func (repo *PostsRepository) GetAll() ([]*entity.Post, error) {
 func (repo *PostsRepository) GetPostsByUsername(username string) ([]*entity.Post, error) {
 	var posts []*entity.Post
 
-	query := fmt.Sprintf("SELECT p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id WHERE u.username=$1", postsTable, usersTable)
+	query := fmt.Sprintf("SELECT p.id, p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id WHERE u.username=$1", postsTable, usersTable)
 	rows, err := repo.db.Query(query, username)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
-		post := &entity.Post{}
-		user := &entity.User{}
+		post := &entity.Post{
+			User: &entity.User{},
+		}
 
-		if err := rows.Scan(&post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&post.ID, &post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &post.User.ID, &post.User.Username); err != nil {
 			return nil, err
 		}
 
@@ -141,17 +150,18 @@ func (repo *PostsRepository) GetPostsByUsername(username string) ([]*entity.Post
 func (repo *PostsRepository) GetPostsByCategory(category string) ([]*entity.Post, error) {
 	var posts []*entity.Post
 
-	query := fmt.Sprintf("SELECT p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id WHERE p.post_category=$1", postsTable, usersTable)
+	query := fmt.Sprintf("SELECT p.id, p.post_type, p.title, p.post_category, p.post_text, p.url, p.created, u.id, u.username FROM %s p INNER JOIN %s u on p.user_id = u.id WHERE p.post_category=$1", postsTable, usersTable)
 	rows, err := repo.db.Query(query, category)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
-		post := &entity.Post{}
-		user := &entity.User{}
+		post := &entity.Post{
+			User: &entity.User{},
+		}
 
-		if err := rows.Scan(&post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&post.ID, &post.Type, &post.Title, &post.Category, &post.Text, &post.URL, &post.Created, &post.User.ID, &post.User.Username); err != nil {
 			return nil, err
 		}
 
@@ -164,13 +174,15 @@ func (repo *PostsRepository) GetPostsByCategory(category string) ([]*entity.Post
 		if err != nil {
 			return nil, err
 		}
+
+		posts = append(posts, post)
 	}
 
 	return posts, nil
 }
 
 func (repo *PostsRepository) DeletePost(postID int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE post_id=$1", postsTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", postsTable)
 	_, err := repo.db.Exec(query, postID)
 	if err != nil {
 		return err
@@ -189,15 +201,15 @@ func (repo *PostsRepository) GetComments(postID int) ([]*entity.Comment, error) 
 	}
 
 	for rows.Next() {
-		user := &entity.User{}
-		comment := &entity.Comment{}
+		comment := &entity.Comment{
+			User: &entity.User{},
+		}
 
-		err = rows.Scan(&comment.ID, &comment.Body, &comment.Created, &user.ID, &user.Username)
+		err = rows.Scan(&comment.ID, &comment.Body, &comment.Created, &comment.User.ID, &comment.User.Username)
 		if err != nil {
 			return nil, err
 		}
 
-		comment.User = user
 		comments = append(comments, comment)
 	}
 

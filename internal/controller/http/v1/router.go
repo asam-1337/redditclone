@@ -2,17 +2,22 @@ package v1
 
 import (
 	"github.com/asam-1337/reddit-clone.git/internal/service"
+	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type Handler struct {
-	services *service.Service
+	services    *service.Service
+	sessManager service.SessionManagerInterface
+	logrus      *logrus.Entry
 }
 
-func NewHandler(services *service.Service) *Handler {
+func NewHandler(services *service.Service, conn redis.Conn) *Handler {
 	return &Handler{
-		services: services,
+		services:    services,
+		sessManager: service.NewSessionManager(conn),
 	}
 }
 
@@ -26,7 +31,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			"title": "Root",
 		})
 	})
-	api := router.Group("/api")
+	api := router.Group("/api", h.AccessLogMiddleware)
 	{
 		api.POST("/register", h.SignUp)
 		api.POST("/login", h.SignIn)
@@ -42,7 +47,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		post := api.Group("/post/:post_id")
 		{
 			post.GET("/", h.GetPostByID)
-			post.POST("/", h.AuthMiddleware, h.CreateComment)
+			post.POST("/", h.CreateComment)
 			post.DELETE("/", h.AuthMiddleware, h.DeletePost)
 			post.DELETE("/:comment_id", h.AuthMiddleware)
 

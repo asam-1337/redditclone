@@ -1,8 +1,10 @@
 package v1
 
 import (
+	"github.com/asam-1337/reddit-clone.git/internal/entity"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 type authInput struct {
@@ -24,6 +26,22 @@ func (h *Handler) SignUp(c *gin.Context) {
 		return
 	}
 
+	sess := &entity.Session{
+		Username:  input.Username,
+		Useragent: c.GetHeader("User-Agent"),
+	}
+	sessID, err := h.sessManager.Create(sess)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
+
+	cookie := &http.Cookie{
+		Name:    "session_id",
+		Value:   sessID.ID,
+		Expires: time.Now().Add(12 * time.Hour),
+	}
+
+	http.SetCookie(c.Writer, cookie)
 	c.JSON(http.StatusCreated, map[string]interface{}{
 		"token": token,
 	})
